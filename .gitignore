@@ -1,0 +1,10 @@
+*.db
+migrations
+.DS_Store
+__pycache__
+*.jl
+test.json
+.vscode
+.vagrant
+*.log
+aqi.retry

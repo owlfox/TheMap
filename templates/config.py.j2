@@ -1,0 +1,6 @@
+
+
+SECRET_KEY='dev'
+# for test only sqlitedb
+# SQLALCHEMY_DATABASE_URI='sqlite:///temp.db'
+SQLALCHEMY_DATABASE_URI='postgresql://{{ database_user }}:{{ db_pass }}@{{ database_host }}/{{ database_name }}'

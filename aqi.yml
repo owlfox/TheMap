@@ -1,0 +1,108 @@
+---
+- name: pass a message on the command line
+  hosts: web
+  vars:
+    user: "{{ ansible_user }}"
+    proj_name: aqi
+    proj_dirname: aqi
+    proj_path: "{{ ansible_env.HOME }}/workspace"
+    venv_home: "{{ ansible_env.HOME }}/.virtualenvs"
+    user_systemd_path: "{{ ansible_env.HOME }}/.config/systemd/user"
+    crawl_interval_mins: 20
+    venv_path: "{{ venv_home }}/{{ proj_name }}"
+    reqs_path: requirements.txt
+    live_hostname: 192.168.68.68.xip.io
+    domains:
+      - 192.168.68.68.xip.io
+      - 192.168.68.68.xip.io
+    repo_url: git@gitlab.com:owlfox/the_map.git
+    locale: en_US.UTF-8
+    database_name: "{{ proj_name }}"
+    database_user: "{{ proj_name }}"
+    database_host: localhost
+    database_port: 5432
+  vars_files:
+    - secrets.yml
+  tasks:
+    - name: Update all packages to the latest version
+      become: true
+      apt:
+        upgrade: dist
+    - name: install apt packages
+      become: true
+      apt: 
+        update_cache: yes
+        cache_valid_time: 3600
+        pkg:
+          - git
+          - libjpeg-dev
+          - libpq-dev
+          - memcached
+          - nginx 
+          - postgresql
+          - python-dev
+          - python-pip
+          - python-psycopg2
+          - python-setuptools
+          - python-virtualenv
+          - supervisor
+          - libxml2-dev
+          - libxslt1-dev
+          - zlib1g-dev
+          - libffi-dev
+          - libssl-dev
+          - python3 
+          - python3-dev
+    - name: install Python requirements globally via pip
+      pip: 
+        state: latest
+        name:
+          - pip
+          - virtualenv
+          - virtualenvwrapper
+          - scrapy
+      become: True
+    - name: install requirements.txt
+      pip: requirements={{ proj_path }}/{{ reqs_path }} virtualenv={{ venv_path }}
+    - name: clone the repo
+      git: repo={{ repo_url }} dest={{ proj_path }} accept_hostkey=yes
+    - name: install crawl systemd unit file
+      template: src=templates/aqi_crawl.service.j2 dest={{ user_systemd_path }}/aqi_crawl.service
+    - name: install crawl systemd timer file
+      template: src=templates/aqi_crawl.timer.j2 dest={{ user_systemd_path }}/aqi_crawl.timer
+    - name: copy config file
+      template: src=templates/config.py.j2 dest={{ proj_path }}/config.py
+    - name: Set timezone to Asia/Taipei
+      timezone:
+        name: Asia/Taipei
+    - name: create project locale
+      locale_gen: name={{ locale }}
+      become: True
+    - name: create a DB user
+      postgresql_user:
+        name: "{{ database_user }}"
+        password: "{{ db_pass }}"
+      become: True
+      become_user: postgres
+    - name: create the database
+      postgresql_db:
+        name: "{{ database_name }}"
+        owner: "{{ database_user }}"
+        encoding: UTF8
+        lc_ctype: "{{ locale }}"
+        lc_collate: "{{ locale }}"
+        template: template0
+      become: True
+      become_user: postgres
+    - name: start crawl service
+      systemd: 
+        name: aqi_crawl
+        state: started 
+        enabled: yes
+    - name: enable a timer for aqi_crawl
+      systemd: 
+        name: aqi_crawl.timer
+        state: started
+        enabled: yes
+        daemon_reload: yes
+        
