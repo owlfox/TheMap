@@ -2,8 +2,8 @@
 Description=crawl aqi data
 
 [Service]
-ExecStart={{ user_systemd_path }}.local/bin/scrapy crawl aqi
-WorkingDirectory={{ user_systemd_path }}/workspace
+ExecStart={{ ansible_env.HOME }}/.local/bin/scrapy crawl aqi
+WorkingDirectory={{ proj_path }}
 
 [Install]
 WantedBy=default.target

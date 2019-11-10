@@ -80,9 +80,11 @@
     - name: copy config file
       template: src=templates/config.py.j2 dest={{ proj_path }}/config.py
     - name: Set timezone to Asia/Taipei
+      become: yes
       timezone:
         name: Asia/Taipei
         hwclock: UTC
+        
     - name: create project locale
       locale_gen: name={{ locale }}
       become: True
@@ -102,17 +104,21 @@
         template: template0
       become: True
       become_user: postgres
+    - name: Change the working directory to migrate db
+      shell: python3 manage.py db init && python3 manage.py db migrate && python3 manage.py db upgrade
+      args:
+        chdir: "{{ proj_path }}"
     - name: start crawl service
       systemd: 
         name: aqi_crawl
-        state: started 
         enabled: yes
+        state: started 
         scope: user
     - name: enable a timer for aqi_crawl
       systemd: 
         name: aqi_crawl.timer
-        state: started
         enabled: yes
+        state: started
         scope: user
         daemon_reload: yes
         
