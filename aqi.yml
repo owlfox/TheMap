@@ -82,6 +82,7 @@
     - name: Set timezone to Asia/Taipei
       timezone:
         name: Asia/Taipei
+        hwclock: UTC
     - name: create project locale
       locale_gen: name={{ locale }}
       become: True
