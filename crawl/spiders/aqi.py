@@ -21,6 +21,8 @@ class AQISpider(scrapy.Spider):
 
     def parse(self, response):
         result = json.loads(response.body_as_unicode())
+        
+        # easier to debug than doing it in pipeline
         for item in result:
             self.init_sites(item)
             self.insert_log(item, response)
@@ -34,7 +36,8 @@ class AQISpider(scrapy.Spider):
         if len(item['SiteId']) != 0:
             id = int(item['SiteId'])
         else:
-            return
+            # don't know how to deal with these sites yet
+            id = -1 
         if EpaAQISite.query.filter_by(site_id=id).first() == None:
             keys = ['County', 'SiteName', 'Longitude', 'Latitude']
             content = {x: item[x] for x in keys}
@@ -50,8 +53,8 @@ class AQISpider(scrapy.Spider):
     #check if timestamp existed in db, insert if not
     def insert_log(self, item, response):
         pub_time = datetime.datetime.strptime(item['PublishTime'], '%Y-%m-%d %H:%M')
-        query = db.session.query(func.count(AQILogs.id)).filter_by(site_id=item['SiteId']).filter(AQILogs.publish_time > pub_time)
-        # pdb.set_trace()
+        query = db.session.query(func.count(AQILogs.id)).filter_by(site_id=item['SiteId']).filter(AQILogs.publish_time >= pub_time)
+        
         if query.scalar() == 0:
             keys = ['AQI', 'Pollutant', 'Status', 'SO2', 'CO_8hr', 'CO',
                 'O3', 'O3_8hr', 'PM10', 'PM2.5', 'NO2', 'NOx', 'NO',
@@ -75,4 +78,5 @@ class AQISpider(scrapy.Spider):
                 db.session.add(newlog)
                 db.session.commit()
             except:
-                pdb.set_trace()
+                # pdb.set_trace()
+                pass

@@ -105,7 +105,18 @@
       become: True
       become_user: postgres
     - name: Change the working directory to migrate db
-      shell: python3 manage.py db init && python3 manage.py db migrate && python3 manage.py db upgrade
+      shell: python3 manage.py db init
+      ignore_errors: yes
+      args:
+        chdir: "{{ proj_path }}"
+    - name: migrate db
+      shell: python3 manage.py db migrate
+      ignore_errors: yes
+      args:
+        chdir: "{{ proj_path }}"
+    - name: upgrade db
+      shell: python3 manage.py db upgrade
+      ignore_errors: yes
       args:
         chdir: "{{ proj_path }}"
     - name: start crawl service
