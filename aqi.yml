@@ -122,6 +122,11 @@
       ignore_errors: yes
       args:
         chdir: "{{ proj_path }}"
+    - name: enable lingering for user systemd task
+      shell: loginctl enable-linger {{ user }}
+      become: yes
+
+        
         
     # not sure if it's useful, if not, reboot works.
     - name: reload systemd daemon
