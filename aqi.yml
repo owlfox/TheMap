@@ -62,12 +62,15 @@
           - pip
           - virtualenv
           - virtualenvwrapper
-          - scrapy
+          
+        executable: pip3
       become: True
+      
     - name: install requirements.txt
       pip: 
         requirements: "{{ proj_path }}/{{ reqs_path }}"
         executable: pip3
+        extra_args: --user
     - name: Create a user systemd folder if it does not exist
       file:
         path: "{{ user_systemd_path }}"
@@ -119,12 +122,19 @@
       ignore_errors: yes
       args:
         chdir: "{{ proj_path }}"
+        
+    # not sure if it's useful, if not, reboot works.
+    - name: reload systemd daemon
+      systemd: 
+        daemon_reload: yes
+      become: yes
     - name: start crawl service
       systemd: 
         name: aqi_crawl
         enabled: yes
         state: started 
         scope: user
+        
     - name: enable a timer for aqi_crawl
       systemd: 
         name: aqi_crawl.timer

@@ -34,7 +34,7 @@ class SiteSchema(Schema):
 @api.route('/sites')
 class Sites(Resource):
     def get(self):
-        epasites = models.EpaAQISite.query.all()
+        epasites = models.EpaAQISite.query.filter(EpaAQISite.site_id >= 0)
         # don't know why there's such key
         keys = [k  for  k in  epasites[0].__dict__.keys() if k != "_sa_instance_state"]
         rtn = []
@@ -47,16 +47,6 @@ class Sites(Resource):
 
 
     
-
-todos = {}
-@api.route('/<string:todo_id>')
-class TodoSimple(Resource):
-    def get(self, todo_id):
-        return {todo_id: todos[todo_id]}
-
-    def put(self, todo_id):
-        todos[todo_id] = request.form['data']
-        return {todo_id: todos[todo_id]}
 
 if __name__ == '__main__':
     app.run(debug=True)
