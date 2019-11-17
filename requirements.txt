@@ -5,3 +5,5 @@ sqlalchemy
 flask_sqlalchemy
 psycopg2
 flask_restplus
+gunicorn
+scrapy
