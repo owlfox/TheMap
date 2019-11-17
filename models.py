@@ -1,7 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 import datetime
 
-from main import db
+import main
+
+db = main.db
 
 class EpaAQISite(db.Model):
     __tablename__ = 'epa_aqi_sites'

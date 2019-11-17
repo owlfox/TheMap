@@ -2,23 +2,20 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 
 from flask_restplus import Api, Resource, fields
-import models
 import pdb
 from flask_csv import send_csv
 from marshmallow import Schema, fields
+
 app = Flask(__name__)
 SQLALCHEMY_DATABASE_URI='sqlite:///temp.db'
 app.config.from_object('config')
-
-
 db = SQLAlchemy(app)
-
-
-
+import models
 
 api = Api(app)
 
-@api.route('/aqi')
+@api.route('/aqi/v1/<site_id>')
+@api.doc(params={'site_id': 'An ID'})
 class AQI(Resource):
     def get(self):
         return {'hello': 'world'}
@@ -32,6 +29,7 @@ class SiteSchema(Schema):
     lon = fields.Str()
 
 @api.route('/sites')
+@api.doc(params={'id': 'An ID'})
 class Sites(Resource):
     def get(self):
         epasites = models.EpaAQISite.query.filter(EpaAQISite.site_id >= 0)
