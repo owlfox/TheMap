@@ -3,3 +3,6 @@ Description=Run aqi_crawl.service every {{ crawl_interval_mins }} minutes
 
 [Timer]
 OnCalendar=*:0/{{ crawl_interval_mins }}
+
+[Install]
+WantedBy=timers.target
