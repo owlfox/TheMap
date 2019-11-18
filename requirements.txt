@@ -6,6 +6,5 @@ flask_sqlalchemy
 psycopg2
 flask_restplus
 gunicorn
-scrapy
 flask_csv
 marshmallow

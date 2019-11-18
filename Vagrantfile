@@ -13,11 +13,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     SHELL
   end
 
-  config.vm.define 'web' do |web|
-    web.vm.box = "ubuntu/bionic64"
-    web.vm.network "private_network", ip: "192.168.33.10"
-    web.ssh.forward_agent = true
-    web.vm.provision "shell", inline: <<-SHELL
+  config.vm.define 'web_crawler' do |web_crawler|
+    web_crawler.vm.box = "ubuntu/bionic64"
+    web_crawler.vm.network "private_network", ip: "192.168.33.10"
+    web_crawler.ssh.forward_agent = true
+    web_crawler.vm.provision "shell", inline: <<-SHELL
       apt-get update
       apt-get install python-minimal -y
     SHELL
