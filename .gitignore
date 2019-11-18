@@ -9,3 +9,4 @@ test.json
 *.log
 aqi.retry
 config.py
+secrets.yml

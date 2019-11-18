@@ -1,5 +1,5 @@
 ---
-- name: pass a message on the command line
+- name: bring up aqi vm
   hosts: vagrant
   vars:
     user: "{{ ansible_user }}"
@@ -11,10 +11,6 @@
     crawl_interval_mins: 20
     venv_path: "{{ venv_home }}/{{ proj_name }}"
     reqs_path: requirements.txt
-    live_hostname: 192.168.68.68.xip.io
-    domains:
-      - 192.168.68.68.xip.io
-      - 192.168.68.68.xip.io
     repo_url: git@gitlab.com:owlfox/the_map.git
     locale: en_US.UTF-8
     database_name: "{{ proj_name }}"
@@ -43,7 +39,6 @@
           - python-dev
           - python-psycopg2
           - python-setuptools
-          - python-virtualenv
           - supervisor
           - libxml2-dev
           - libxslt1-dev

@@ -1,0 +1,4 @@
+web ansible_host=ec2-13-250-11-225.ap-southeast-1.compute.amazonaws.com
+vagrant ansible_host=192.168.68.68
+db ansible_host=192.168.33.11
+web_crawler ansible_host=192.168.33.10

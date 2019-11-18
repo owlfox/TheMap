@@ -1,0 +1,27 @@
+---
+- name: deploy postgres
+  hosts: db
+  vars:
+    proj_name: aqi
+    proj_dirname: aqi
+  vars_files:
+    - secrets.yml
+  roles:
+    - role: db
+      database_name: "{{ proj_name }}"
+      database_user: "{{ proj_name }}"
+      locale: en_US.UTF-8
+  tags: [ db ]
+
+- name: deploy web and crawler
+  hosts: web_crawler
+  vars_files:
+    - secrets.yml
+  roles:
+    - role: web_and_crawler
+      database_host: "{{ hostvars.db.ansible_eth1.ipv4.address }}"
+      live_hostname: 192.168.33.10.xip.io
+      domains:
+        - 192.168.33.10.xip.io
+        - www.192.168.33.10.xip.io
+  tags: [ wc ]
