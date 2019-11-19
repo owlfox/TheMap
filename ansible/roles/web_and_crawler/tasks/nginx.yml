@@ -1,3 +1,16 @@
+---
+- name: gather the missing facts.., not sure why facts not gathered when running with this tag
+  gather_facts:
+  
+- name: set the gunicorn config file
+  template: src=templates/gunicorn.conf.py.j2 dest={{ proj_path }}/gunicorn.conf.py
+- name: set the supervisor config file
+  template: src=templates/supervisor.conf.j2 dest=/etc/supervisor/conf.d/{{ proj_name }}.conf
+  become: True
+- name: restart supervisor
+  supervisorctl: "name={{ gunicorn_procname }} state=restarted"
+  become: True
+
 - name: set the nginx config file
   template: src=nginx.conf.j2 dest=/etc/nginx/sites-available/map.conf
   notify: restart nginx
@@ -13,12 +26,3 @@
   file: path=/etc/nginx/sites-enabled/default state=absent
   notify: restart nginx
   become: True
-- name: create ssl certificates
-  command: >
-    openssl req -new -x509 -nodes -out {{ mezzanine_proj_name }}.crt
-    -keyout {{ mezzanine_proj_name }}.key -subj '/CN={{ domains[0] }}' -days 3650
-    chdir={{ mezzanine_conf_path }}
-    creates={{ mezzanine_conf_path }}/{{ mezzanine_proj_name }}.crt
-  become: True
-  when: tls_enabled
-  notify: restart nginx

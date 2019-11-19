@@ -6,22 +6,39 @@
     proj_dirname: aqi
   vars_files:
     - secrets.yml
+    
+  pre_tasks:
+    - name: Update all packages to the latest version
+      become: true
+      apt:
+        update_cache: yes
+        upgrade: dist
+
   roles:
     - role: db
+      locale: en_US.UTF-8
       database_name: "{{ proj_name }}"
       database_user: "{{ proj_name }}"
-      locale: en_US.UTF-8
   tags: [ db ]
 
 - name: deploy web and crawler
   hosts: web_crawler
+  tags: [ wc ]
   vars_files:
     - secrets.yml
+  pre_tasks:
+    - name: Update all packages to the latest version
+      become: true
+      apt:
+        update_cache: yes
+        upgrade: dist
   roles:
     - role: web_and_crawler
-      database_host: "{{ hostvars.db.ansible_eth1.ipv4.address }}"
+      database_host: "{{ hostvars.db.ansible_all_ipv4_addresses[-1] }}"
       live_hostname: 192.168.33.10.xip.io
+      
       domains:
         - 192.168.33.10.xip.io
         - www.192.168.33.10.xip.io
-  tags: [ wc ]
+        - map.owlfox.org
+  

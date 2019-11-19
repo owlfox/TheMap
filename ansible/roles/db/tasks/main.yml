@@ -8,7 +8,11 @@
     - postgresql
     - python-psycopg2
   become: True
-  
+- name: Set timezone to Asia/Taipei
+  become: yes
+  timezone:
+    name: Asia/Taipei
+    hwclock: UTC
 - name: copy configuration file
   copy: >
     src=postgresql.conf dest=/etc/postgresql/10/main/postgresql.conf

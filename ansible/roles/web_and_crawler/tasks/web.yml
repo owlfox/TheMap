@@ -1,0 +1,30 @@
+---
+- name: gather the missing facts.., not sure why facts not gathered when running with this tag
+  gather_facts:
+- name: create a logs directory
+  file:
+    path: "{{ ansible_env.HOME }}/logs"
+    state: directory
+- name: clone the repo
+  git: repo={{ terria_repo_url }} dest={{ terria_proj_path }} accept_hostkey=yes version=taiwan
+  ignore_errors: yes
+- name: Install packages based on package.json.
+  npm:
+    path: "{{ terria_proj_path }}"
+  ignore_errors: yes
+- name: get npm node
+  shell: curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+- name: install npm node 
+  shell: sudo apt-get install -y nodejs
+- name: build terria
+  shell: npm run gulp
+  args:
+    chdir: "{{ terria_proj_path }}"
+- name: run terria with pm2, keep it alive after reboot with root
+  shell: npm start
+  args:
+    chdir: "{{ terria_proj_path }}"
+  become: yes
+- name: install tw.json terria client config file
+  template: src=templates/tw.json.j2 dest={{ terria_proj_path }}/wwwroot/init/tw.json
+

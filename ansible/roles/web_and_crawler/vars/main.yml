@@ -2,14 +2,23 @@
 user: "{{ ansible_user }}"
 proj_name: aqi
 proj_dirname: aqi
+proj_app: "{{ proj_name }}"
 proj_path: "{{ ansible_env.HOME }}/workspace"
 venv_home: "{{ ansible_env.HOME }}/.virtualenvs"
 user_systemd_path: "{{ ansible_env.HOME }}/.config/systemd/user"
 crawl_interval_mins: 20
+
 venv_path: "{{ venv_home }}/{{ proj_name }}"
 reqs_path: requirements.txt
 repo_url: git@gitlab.com:owlfox/the_map.git
+
+terria_repo_url: git@github.com:owlfox/terriaMap.git
+terria_proj_path: "{{ ansible_env.HOME }}/terriaMap"
+
 conf_path: /etc/nginx/conf
 num_workers: "multiprocessing.cpu_count() * 2 + 1"
 gunicorn_procname: gunicorn_aqi
 locale: en_US.UTF-8
+database_name: "{{ proj_name }}"
+database_user: "{{ proj_name }}"
+

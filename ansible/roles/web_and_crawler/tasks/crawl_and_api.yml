@@ -1,0 +1,70 @@
+---
+- name: clone the repo
+  git: repo={{ repo_url }} dest={{ proj_path }} accept_hostkey=yes
+
+- name: install scrapy
+  shell: sudo pip3 install scrapy --user
+  tags: [scrapy]
+- name: install requirements.txt
+  pip: 
+    requirements: "{{ proj_path }}/{{ reqs_path }}"
+    executable: pip3
+    extra_args: --user
+- name: Create a user systemd folder if it does not exist
+  file:
+    path: "{{ user_systemd_path }}"
+    state: directory
+    mode: '0755'
+- name: install crawl systemd unit file
+  template: src=templates/aqi_crawl.service.j2 dest={{ user_systemd_path }}/aqi_crawl.service
+- name: install crawl systemd timer file
+  template: src=templates/aqi_crawl.timer.j2 dest={{ user_systemd_path }}/aqi_crawl.timer
+- name: copy config file
+  template: src=templates/config.py.j2 dest={{ proj_path }}/config.py
+- name: Set timezone to Asia/Taipei
+  become: yes
+  timezone:
+    name: Asia/Taipei
+    hwclock: UTC
+    
+- name: Change the working directory to migrate db
+  shell: python3 manage.py db init
+  ignore_errors: yes
+  args:
+    chdir: "{{ proj_path }}"
+- name: migrate db
+  shell: python3 manage.py db migrate
+  ignore_errors: yes
+  args:
+    chdir: "{{ proj_path }}"
+- name: upgrade db
+  shell: python3 manage.py db upgrade
+  ignore_errors: yes
+  args:
+    chdir: "{{ proj_path }}"
+- name: enable lingering for user systemd task
+  shell: loginctl enable-linger {{ user }}
+  become: yes
+
+- name: reload systemd daemon to detect service
+  systemd: 
+    daemon_reload: yes
+  become: yes
+  tags: [systemd]
+
+- name: start crawl service
+  systemd: 
+    name: aqi_crawl.service
+    enabled: yes
+    state: started 
+    scope: user
+  tags: [systemd]
+    
+- name: enable a timer for aqi_crawl
+  systemd: 
+    name: aqi_crawl.timer
+    enabled: yes
+    state: started
+    scope: user
+    daemon_reload: yes
+  tags: [systemd]

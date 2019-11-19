@@ -3,6 +3,6 @@ import multiprocessing
 
 bind = "unix:{{ proj_path }}/gunicorn.sock"
 workers = {{ num_workers }}
-errorlog = "/home/{{ user }}/logs/{{ proj_name }}_error.log"
+errorlog = "{{ ansible_env.HOME }}/logs/{{ proj_name }}_error.log"
 loglevel = "error"
 proc_name = "{{ proj_name }}"
