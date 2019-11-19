@@ -18,6 +18,7 @@ import models
 api = Api(app, version='1.0', title='Air Quality Index API',
     description="""it provides hitory data of epa site.
     For source data details, see https://opendata.epa.gov.tw/Data/Details/AQI/ """,
+    doc='/aqi/'
 )
 
 ns = api.namespace('aqi', description='Air Quality Index / 空氣品質資料 API')
@@ -108,11 +109,14 @@ class Sites(Resource):
         logs_dic = {l.site_id: l for l in logs}
         
         rtn = []
+        dic = {}
         for site in epasites:
             dic = site.__dict__
             dic.pop("_sa_instance_state") # don't know why there's such key
             dic.pop("updated_at")
             
+            dic['Lon'] = dic.pop('lon')
+            dic['Lat'] = dic.pop('lat')
             # 'join' the latest log...
             the_log = logs_dic[dic['site_id']]
             dic['aqi'] = the_log.aqi
@@ -121,8 +125,8 @@ class Sites(Resource):
             dic['wind_direction'] = the_log.pollutant
             dic['wind_speed'] = the_log.pollutant
             rtn.append(dic)
-        keys = epasites[0].__dict__.keys() if len(epasites) > 0 else None
-        return send_csv(rtn, "rtn.csv" ,keys , cache_timeout=0)
+        
+        return send_csv(rtn, "sites.csv" ,dic.keys() , cache_timeout=0)
 
 
     
