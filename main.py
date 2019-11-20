@@ -17,7 +17,9 @@ import models
 
 api = Api(app, version='1.0', title='Air Quality Index API',
     description="""it provides hitory data of epa site.
-    For source data details, see https://opendata.epa.gov.tw/Data/Details/AQI/ """,
+    For source data details, see https://opendata.epa.gov.tw/Data/Details/AQI/ 
+    updated at 2019-11-20 12:18
+    """,
     doc='/aqi/'
 )
 
@@ -61,14 +63,16 @@ class AQI(Resource):
         
         t= self.get_time_delta(site_id, interval)
         if t == None:
-            return Response("invalid input", status=400)
+            return Response("Validation Error", status=400)
         
         last_pub_time = db.session.query(models.AQILogs.publish_time
                     ).filter(models.AQILogs.id == db.session.query(func.max(models.AQILogs.id))
                     ).first()[0]
         
-        logs = db.session.query(models.AQILogs
-                    ).filter(models.AQILogs.id == site_id
+        logs = db.session.query(
+            models.AQILogs.publish_time,
+            models.AQILogs.aqi
+                    ).filter(models.AQILogs.site_id == site_id
                     ).filter(models.AQILogs.publish_time >= (last_pub_time - t)
                     ).all()
         
@@ -76,60 +80,60 @@ class AQI(Resource):
         rtn = []
         dic = {}
         for log in logs:
-            dic = log.__dict__
-            dic.pop("_sa_instance_state") # don't know why there's such key
-            dic.pop("id") # don't know why there's such key
+            # dic = log.__dict__
+            # dic.pop("_sa_instance_state") # don't know why there's such key
+            # dic.pop("id") # don't know why there's such key yyyy-mm-ddThh:mm:ss+zz
+            dic = log._asdict()
+            
+            # format: 2019-11-19T04:55:00+0000
+            dic['Time (UTC)'] = dic.pop('publish_time').strftime("%Y-%m-%dT%H:%M:%S+0800")
             rtn.append(dic)
-        
-        
         return send_csv(rtn, "rtn.csv" ,dic.keys() , cache_timeout=0)
 
-class SiteSchema(Schema):
-    site_id = fields.Integer()
-    site_name = fields.Str()
-    created_at = fields.DateTime()
-    county = fields.Str()
-    lat = fields.Str()
-    lon = fields.Str()
 
 @ns.route('/sites')
 class Sites(Resource):
-    @ns.doc('get sites information with current aqi and the pollutant')
+    @ns.doc('get sites information with current aqi, the pollutant and etc.')
     @ns.produces(["text/csv"])
     def get(self):
         
-        epasites = models.EpaAQISite.query.filter(models.EpaAQISite.site_id >= 0)
+        epasites = db.session.query(
+                    models.EpaAQISite.site_name,
+                    models.EpaAQISite.site_id,
+                    models.EpaAQISite.county,
+                    models.EpaAQISite.lon,
+                    models.EpaAQISite.lat,
+                    ).filter(models.EpaAQISite.site_id >= 0).all()
         # todo: fix foreign key... and just join it
         last_pub_time = db.session.query(models.AQILogs.publish_time
                         ).filter(models.AQILogs.id == db.session.query(func.max(models.AQILogs.id))
                         ).first()[0]
-        logs = db.session.query(models.AQILogs).distinct(models.AQILogs.site_id
+        lastlogs = db.session.query(models.AQILogs).distinct(models.AQILogs.site_id
                         ).filter(models.AQILogs.publish_time >= last_pub_time
                         ).all()
-        logs_dic = {l.site_id: l for l in logs}
+        lastlogs_dic = {l.site_id: l for l in lastlogs}
         
         rtn = []
-        dic = {}
+        result = {} # keys of to_csv argument
         for site in epasites:
-            dic = site.__dict__
-            dic.pop("_sa_instance_state") # don't know why there's such key
-            dic.pop("updated_at")
-            
+            dic = site._asdict()
             dic['Lon'] = dic.pop('lon')
             dic['Lat'] = dic.pop('lat')
-            # 'join' the latest log...
-            the_log = logs_dic[dic['site_id']]
-            dic['aqi'] = the_log.aqi
-            dic['status'] = the_log.status
-            dic['pollutant'] = the_log.pollutant
-            dic['wind_direction'] = the_log.pollutant
-            dic['wind_speed'] = the_log.pollutant
-            rtn.append(dic)
+            
+            # 'join' the latest log to show current site info...
+            the_log = lastlogs_dic[dic['site_id']]
+            the_dic = the_log.__dict__
+            for e in ['created_at', '_sa_instance_state', 'id']:
+                the_dic.pop(e)
+            result = {**dic, **the_dic}
+            
+            rtn.append(result)
         
-        return send_csv(rtn, "sites.csv" ,dic.keys() , cache_timeout=0)
+        return send_csv(rtn, "sites.csv" ,result.keys() , cache_timeout=0)
 
 
     
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=True)
+    app.run()
