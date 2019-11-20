@@ -11,3 +11,4 @@ aqi.retry
 config.py
 secrets.yml
 gunicorn.conf.py
+gunicorn.pid
