@@ -25,6 +25,4 @@
   args:
     chdir: "{{ terria_proj_path }}"
   become: yes
-- name: install tw.json terria client config file
-  template: src=templates/tw.json.j2 dest={{ terria_proj_path }}/wwwroot/init/tw.json
 

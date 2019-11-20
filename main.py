@@ -10,7 +10,7 @@ import re
 from datetime import timedelta, datetime
 
 app = Flask(__name__)
-SQLALCHEMY_DATABASE_URI='sqlite:///temp.db'
+
 app.config.from_object('config')
 db = SQLAlchemy(app)
 import models
@@ -76,13 +76,9 @@ class AQI(Resource):
                     ).filter(models.AQILogs.publish_time >= (last_pub_time - t)
                     ).all()
         
-        
         rtn = []
         dic = {}
         for log in logs:
-            # dic = log.__dict__
-            # dic.pop("_sa_instance_state") # don't know why there's such key
-            # dic.pop("id") # don't know why there's such key yyyy-mm-ddThh:mm:ss+zz
             dic = log._asdict()
             
             # format: 2019-11-19T04:55:00+0000
@@ -104,7 +100,7 @@ class Sites(Resource):
                     models.EpaAQISite.lon,
                     models.EpaAQISite.lat,
                     ).filter(models.EpaAQISite.site_id >= 0).all()
-        # todo: fix foreign key... and just join it
+        # todo: fix with foreign key... and just join it
         last_pub_time = db.session.query(models.AQILogs.publish_time
                         ).filter(models.AQILogs.id == db.session.query(func.max(models.AQILogs.id))
                         ).first()[0]
@@ -114,7 +110,7 @@ class Sites(Resource):
         lastlogs_dic = {l.site_id: l for l in lastlogs}
         
         rtn = []
-        result = {} # keys of to_csv argument
+        result = {} # send_csv need keys of dictionary, which is stupid
         for site in epasites:
             dic = site._asdict()
             dic['Lon'] = dic.pop('lon')
