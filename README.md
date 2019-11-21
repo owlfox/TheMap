@@ -6,6 +6,27 @@ A web GIS app based on TerriaJS, for the frontend code see [this repo](https://g
 This repo includes the postgresSQL, crawler(by scrapy), nginx and the corresponding ansible playbooks.
 * postgres resides in a separated VM called db for easy monitoring (hopefully).
 * the other vm contains nginx, flask api, scrapy crawler.
+* nearly all the ansible yaml files to automate deploying, excluding TLS cert, pm2 startup 
+
+for any issues regarding this repo, please open issue in the frontend one, I don't read gitlab notification.
+
+# run individual module
+
+# crawler
+0. `pip install -r requirements.txt --user` or with `venv`, then install `scrapy` separately.(It's weired that scrapy need root access to install, probably a bug)
+1. copy the `config.py.example` to `config.py`, it uses sqlite by default.
+2. install the pip packages in requirements and scrapy
+3. `python3 manage.py db init && python3 manage.py db migrate && python3 manage.py db upgrade` to migrate the db, a `temp.db` sqlite file should be in there. 
+4. then run `scrapy crawl aqi` in the project folder, to crawl data
+
+## flask api document with openapi/swagger
+See http://map.owlfox.org/aqi for api information, basically all of them returns formated csv required by terriaJS.
+
+run
+```
+FLASK_APP=main.py FLASK_DEBUG=1 python3 -m flask run -h 0.0.0.0
+```
+http://localhost:5000/aqi to debug the api
 
 # deploy with ansible
 * configure `hosts`, `secrets.yml`, `ansible.cfg` with your sectets, keys and hostnames.
@@ -17,21 +38,6 @@ to deploy.
 * `vagrant up` if you prefer to try it locally with virtualbox, the config file is `Vagrantfile`.
 
 
-## flask api document with openapi/swagger
-See http://map.owlfox.org/aqi for api information, basically all of them returns formated csv required by terriaJS.
-
-run
-```
-FLASK_APP=main.py FLASK_DEBUG=1 python3 -m flask run -h 0.0.0.0
-```
-http://localhost:5000/aqi to debug the api
-
-# run crawler locally
-0. `pip install -r requirements.txt --user` or with `venv`, then install `scrapy` separately.(It's weired that scrapy need root access to install, probably a bug)
-1. copy the `config.py.example` to `config.py`, it uses sqlite by default.
-2. install the pip packages in requirements and scrapy
-3. `python3 manage.py db init && python3 manage.py db migrate && python3 manage.py db upgrade` to init db, a `temp.db` sqlite file should be in there. 
-4. then run `scrapy crawl aqi` in the project folder, to crawl data
 
 # db schema
 see models.py, two tables, one for sites, one for logs of sites.
@@ -46,3 +52,7 @@ see `scripts/shp2citygml.py` for the script to transform file that cesium Ion (A
 # TODO
 * backup
 * monitor
+* PM2 ansible yml
+* seprate crawler into another instance
+* find a better way to stream 3d tiles, vendor locked with cesiumIon
+
