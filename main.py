@@ -4,7 +4,7 @@ from http import HTTPStatus
 from flask_restplus import Api, Resource, fields
 import pdb
 from flask_csv import send_csv
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from marshmallow import Schema, fields
 import re
 from datetime import timedelta, datetime
@@ -101,12 +101,20 @@ class Sites(Resource):
                     models.EpaAQISite.lat,
                     ).filter(models.EpaAQISite.site_id >= 0).all()
         # todo: fix with foreign key... and just join it
-        last_pub_time = db.session.query(models.AQILogs.publish_time
-                        ).filter(models.AQILogs.id == db.session.query(func.max(models.AQILogs.id))
-                        ).first()[0]
-        lastlogs = db.session.query(models.AQILogs).distinct(models.AQILogs.site_id
-                        ).filter(models.AQILogs.publish_time >= last_pub_time
-                        ).all()
+        
+        subq = db.session.query(
+            models.AQILogs.site_id,
+            func.max(models.AQILogs.created_at).label('maxdate')
+        ).group_by(models.AQILogs.site_id).subquery('t2')
+
+        query = db.session.query(models.AQILogs).join(
+            subq,
+            and_(
+                models.AQILogs.site_id == subq.c.site_id,
+                models.AQILogs.created_at == subq.c.maxdate
+            )
+        )
+        lastlogs = query.all()
         lastlogs_dic = {l.site_id: l for l in lastlogs}
         
         rtn = []
