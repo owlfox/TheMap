@@ -10,7 +10,7 @@ crawl_interval_mins: 20
 
 venv_path: "{{ venv_home }}/{{ proj_name }}"
 reqs_path: requirements.txt
-repo_url: git@gitlab.com:owlfox/the_map.git
+repo_url: git@github.com:owlfox/theMap.git
 
 terria_repo_url: git@github.com:owlfox/terriaMap.git
 terria_proj_path: "{{ ansible_env.HOME }}/terriaMap"
