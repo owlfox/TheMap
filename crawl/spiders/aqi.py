@@ -4,13 +4,13 @@ import sys
 sys.path.append("..") # Adds higher directory to python modules path.
 import scrapy
 import json
-
+import logging
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func
 import pdb
 from models import *
-NUMBERICAL_COLS = ["SO2", "CO", "CO_8hr", "O3", "O3_8hr", "PM10", "PM2p5", "PM2p5_AVG", "PM10_AVG", "NO2", "NOx", "NO", "wind_speed", "wind_direction"]
+NUMBERICAL_COLS = ["SO2", "CO", "CO_8hr", "O3", "O3_8hr", "PM10", "PM2p5", "PM2p5_AVG", "PM10_AVG", "NO2", "NOx", "NO", "wind_speed", "wind_direction", "aqi"]
 class AQISpider(scrapy.Spider):
     name = "aqi"
     
@@ -33,11 +33,14 @@ class AQISpider(scrapy.Spider):
 
         # {'SiteName': '行動監測01', 'County': '臺北市','Longitude': '', 'Latitude': '', 'SiteId': ''}
         # ....
-        if len(item['SiteId']) != 0:
+        
+        if item['SiteId'].isdigit():
             id = int(item['SiteId'])
         else:
-            # don't know how to deal with these sites yet
-            id = -1 
+            logging.log(logging.ERROR, "Malformed site data: " + str(item))            
+            return
+            
+        
         if EpaAQISite.query.filter_by(site_id=id).first() == None:
             keys = ['County', 'SiteName', 'Longitude', 'Latitude']
             content = {x: item[x] for x in keys}
@@ -47,12 +50,16 @@ class AQISpider(scrapy.Spider):
             content['lon'] = content.pop('Longitude')
             content['site_id'] = id
             newsite = EpaAQISite(content=content)
+
             db.session.add(newsite)
             db.session.commit()
     
     #check if the new log existed in db, insert if not
     def insert_log(self, item, response):
         pub_time = datetime.datetime.strptime(item['PublishTime'], '%Y-%m-%d %H:%M')
+        if not item['SiteId'].isdigit():
+            logging.log(logging.ERROR, "Malformed log data: " + str(item))  
+            return 
         query = db.session.query(func.count(AQILogs.id)).filter_by(site_id=item['SiteId']).filter(AQILogs.publish_time >= pub_time)
         
         if query.scalar() == 0:
@@ -76,7 +83,7 @@ class AQISpider(scrapy.Spider):
             # filter out some mysterious values, 'ND', '', '-', 
             for key in NUMBERICAL_COLS:
                 if key in content and not content[key].replace('.','',1).isdigit():
-                    pdb.set_trace()
+                    
                     content.pop(key)
                     
             

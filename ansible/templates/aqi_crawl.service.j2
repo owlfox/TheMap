@@ -2,7 +2,7 @@
 Description=crawl aqi data
 
 [Service]
-ExecStart={{ ansible_env.HOME }}/.local/bin/scrapy crawl aqi
+ExecStart={{ ansible_env.HOME }}/.local/bin/scrapy crawl aqi --logfile {{ ansible_env.HOME }}/logs/crawler.log --loglevel ERROR
 WorkingDirectory={{ proj_path }}
 
 [Install]
