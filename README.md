@@ -8,7 +8,6 @@ This repo includes the postgresSQL, crawler(by scrapy), nginx and the correspond
 * the other vm contains nginx, flask api, scrapy crawler.
 * nearly all the ansible yaml files to automate deploying, excluding TLS cert, pm2 startup 
 
-for any issues regarding this repo, please open issue in the frontend one, I don't read gitlab notification.
 
 # run individual module
 
