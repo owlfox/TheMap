@@ -13,7 +13,7 @@
     path: "{{ terria_proj_path }}"
   ignore_errors: yes
 - name: get npm node
-  shell: curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+  shell: curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 - name: install npm node 
   shell: sudo apt-get install -y nodejs
 - name: build terria
